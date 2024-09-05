@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: 2023-2024 UnionTech Software Technology Co., Ltd.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+version: "1"
+
+package:
+  id: org.deepin.camera
+  name: "deepin-camera"
+  version: 6.5.0.1
+  kind: app
+  description: |
+    camera for deepin os.
+
+base: org.deepin.base/23.1.0/loong64
+runtime: org.deepin.runtime.dtk/23.1.0/loong64
+
+command:
+  - deepin-camera
+
+build: |
+  # cat /var/lib/dpkg/status|grep "^Package: " > $PREFIX/packages.list
+  set -x
+  bash ./install_dep linglong/sources "$PREFIX"
+  # service ll-cli launch up
+  find linglong/sources/deepin-camera -type f -name "*.service" -exec sed -i 's|^Exec=.*|Exec=/usr/bin/ll-cli run org.deepin.camera --exec deepin-camera|g' {} +
+  cmake -S linglong/sources/deepin-camera -B build ${conf_args} \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX="${PREFIX}" \
+        -DVERSION=6.5.0.1 \
+        -DLINGLONG_BUILD_ON=1
+  cd build
+  make -j`nproc` && make install
+
+sources:
+  - kind: git
+    url: https://github.com/linuxdeepin/deepin-camera
+    commit: 2e6952433d31fc4ce6a651874f46c3d52bdee5ba
+  # linglong:gen_deb_source sources loong64 https://ci.deepin.com/repo/deepin/deepin-community/backup/rc2 beige main community
+  # linglong:gen_deb_source install libdtkgui-dev, libdtkwidget-dev, qtmultimedia5-dev
+  # linglong:gen_deb_source install libavutil-dev, libavformat-dev, libxtst-dev, libavcodec-dev, libavfilter-dev, deepin-gettext-tools
+  # linglong:gen_deb_source install libv4l-dev, libsdl2-dev, portaudio19-dev, libpng-dev, libasound2-dev, libpciaccess-dev
+  # linglong:gen_deb_source install libusb-1.0-0-dev, zlib1g-dev, libudev-dev, libswscale-dev, libswresample-dev, libffmpegthumbnailer-dev
+  # linglong:gen_deb_source install libx11-dev,libva-dev, libimageeditor-dev
+  # linglong:gen_deb_source install libdwayland-dev | libkf5wayland-dev, libwayland-dev
+  # linglong:gen_deb_source install libgstreamer1.0-dev, libgstreamer-plugins-base1.0-dev, gstreamer1.0-plugins-good
